@@ -15,11 +15,17 @@ handle_collection_news(updated, {_Record, Attr, _OldVal, _NewVal}, {Prefix, Key}
   when Attr =:= element(5, Key) ->
     boss_cache:delete(Prefix, Key),
     {ok, cancel_watch};
-handle_collection_news(updated, {_Record, Attr, _OldVal, _NewVal}, {Prefix, Key}) ->
+handle_collection_news(updated, {_Record, Attr, OldVal, NewVal}, {Prefix, Key}) ->
     Conditions = element(2, Key),
     case proplists:lookup(Attr, Conditions) of
         none ->
-            ok;
+            case OldVal== NewVal of
+                true ->
+                    ok;
+                false ->
+                    boss_cache:delete(Prefix, Key),
+                    {ok, cancel_watch}
+            end;
         _ ->
             boss_cache:delete(Prefix, Key),
             {ok, cancel_watch}
